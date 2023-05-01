@@ -1,26 +1,40 @@
 package com.streamliner.trackingapp.ui
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.streamliner.trackingapp.R
+import com.streamliner.trackingapp.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity: AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        var toolbar : MaterialToolbar = findViewById(R.id.toolbar)
-        var bottomNavigationView : BottomNavigationView = findViewById(R.id.bottomNavigationView)
-        //var navHostFragment: Fragment = findViewById(R.id.navHostFragment)
-        //setSupportActionBar(toolbar)
-        //bottomNavigationView.setupWithNavController(navController = navHostFragment.findNavController())
+        setSupportActionBar(binding.toolbar)
+
+        // Get a reference to the NavHostFragment using findViewById
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        binding.bottomNavigationView.setupWithNavController(navController = navHostFragment.findNavController())
+
+        navHostFragment.findNavController().addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.settingsFragment, R.id.runFragment, R.id.statisticFragment ->
+                    binding.bottomNavigationView.visibility = View.VISIBLE
+                else -> binding.bottomNavigationView.visibility = View.GONE
+            }
+        }
 
     }
 }
