@@ -2,7 +2,7 @@ package com.streamliner.trackingapp.di
 
 import android.content.Context
 import androidx.room.Room
-import com.streamliner.trackingapp.Consts
+import com.streamliner.trackingapp.utils.Consts
 import com.streamliner.trackingapp.database.RunningDatabase
 import dagger.Module
 import dagger.Provides
