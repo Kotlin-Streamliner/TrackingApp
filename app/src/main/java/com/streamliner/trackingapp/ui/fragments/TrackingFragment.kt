@@ -1,5 +1,6 @@
 package com.streamliner.trackingapp.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,7 +12,9 @@ import com.google.android.gms.maps.GoogleMap
 import com.streamliner.trackingapp.R
 import com.streamliner.trackingapp.databinding.FragmentRunBinding
 import com.streamliner.trackingapp.databinding.FragmentTrackingBinding
+import com.streamliner.trackingapp.services.TrackingService
 import com.streamliner.trackingapp.ui.viewmodels.MainViewModel
+import com.streamliner.trackingapp.utils.Consts.ACTION_START_OR_RESUME_SERVICE
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -29,18 +32,20 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentTrackingBinding.bind(view)
         binding.mapView.onCreate(savedInstanceState)
+        binding.btnToggleRun.setOnClickListener {
+            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+        }
+
         binding.mapView.getMapAsync {
             map = it
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
-
+    private fun sendCommandToService(action: String) {
+        Intent(requireContext(), TrackingService::class.java).also {
+            it.action = action
+            requireContext().startService(it)
+        }
     }
 
     override fun onDestroyView() {
