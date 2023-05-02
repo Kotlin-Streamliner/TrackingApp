@@ -1,22 +1,27 @@
 package com.streamliner.trackingapp.ui.fragments
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.GoogleMap
 import com.streamliner.trackingapp.R
-import com.streamliner.trackingapp.databinding.FragmentRunBinding
 import com.streamliner.trackingapp.databinding.FragmentTrackingBinding
 import com.streamliner.trackingapp.services.TrackingService
 import com.streamliner.trackingapp.ui.viewmodels.MainViewModel
 import com.streamliner.trackingapp.utils.Consts.ACTION_START_OR_RESUME_SERVICE
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+
 
 @AndroidEntryPoint
 class TrackingFragment: Fragment(R.layout.fragment_tracking) {
@@ -33,13 +38,42 @@ class TrackingFragment: Fragment(R.layout.fragment_tracking) {
         _binding = FragmentTrackingBinding.bind(view)
         binding.mapView.onCreate(savedInstanceState)
         binding.btnToggleRun.setOnClickListener {
-            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                checkNotificationPermission()
+            } else {
+                sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+            }
         }
 
         binding.mapView.getMapAsync {
             map = it
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun checkNotificationPermission() {
+        val permission = Manifest.permission.POST_NOTIFICATIONS
+        when {
+            ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED -> {
+                sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+            }
+            shouldShowRequestPermissionRationale(permission) -> {
+                Timber.e("Permission denied permanently.")
+            }
+            else -> {
+                requestNotificationPermission.launch(permission)
+            }
+        }
+    }
+
+    private val requestNotificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {isGranted->
+        if (isGranted) {
+            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
+        } else {
+            Timber.e("Permission denied.")
+        }
+    }
+
 
     private fun sendCommandToService(action: String) {
         Intent(requireContext(), TrackingService::class.java).also {
